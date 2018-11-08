@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>San Francisco Crime Data and Arrest Information</title>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Get SFPD crime incident reports from SF Open Data. Meet reporting needs of campus crime statisticians, watchdog groups and post-secondary students and their parents. Perform a polygon search of an irregular area drawn by the user. Perform radial search of variable size around an address provided by the user. Offer crime incident data points for download.">
+
+		<!--CSS-->
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<!-- <link rel="stylesheet" href="//cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.css"> -->
+	<!-- <link rel="stylesheet" href="//cdn.datatables.net/buttons/1.2.1/css/buttons.dataTables.min.css"> -->
+	<!-- <link rel="stylesheet" href="//cdn.datatables.net/fixedheader/3.1.2/css/fixedHeader.dataTables.min.css"> -->
+
+	<link rel="stylesheet" href="//api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.css">
+	<link rel="stylesheet" href="//api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css"/>
+	<!-- <link rel="stylesheet" href="//api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.Default.css"/> -->
+	<link rel="stylesheet" href="//api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.3/leaflet.draw.css" />
+
+	<!-- <link rel="stylesheet" href="css/daterangepicker.css"> -->
+	<!-- <link rel="stylesheet" href="css/jquery.nouislider.css"> -->
+	<!-- <link rel="stylesheet" href="css/jquery-ui.min.css"> -->
+	<link rel="stylesheet" href="css/style.css?ver=1.0">
+
+	<!--Misc-->
+	<link rel="icon" type="image/x-icon" href="images/favicon.ico" />
+	<link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico" />
+
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	</head>
+
+
+	<body id="search">
+		<div id="page-grid">
+
+
+		<!--HEADER-->
+		<header id="page-header" class="grid-item" role="banner">
+			<nav role="navigation">
+				<ul role="menubar">
+					<li id="site-logo" role="presentation"><span role="menuitem">SF Crime Data</span></li>
+					<!-- <li role="presentation"><a href="#" role="menuitem">About</a></li>
+					<li role="presentation"><a href="#" role="menuitem">Help</a></li> -->
+					<li role="presentation" class="pull-right" id="mail_to"></li>
+				</ul>
+			</nav>
+
+			<div id="search-inputs">
+				<div id="location">
+					<div class="search-field">
+						<span class="inner-label">Near</span>
+						<input type="text" class="form-control typeahead" id="input-address" placeholder="San Francisco, CA" autocomplete="off" data-provide="typeahead">
+					</div>
+				</div>
+
+				<div id="filters">
+					<fieldset>
+						<!--Date Range-->
+						<div class="dropdown-field">
+							<button id="daterange" class="button dropdown-button">Start Date - End Date</button>
+
+							<div class="dropdown-footer">
+								<div class="dropdown-footer" id="data-updated"></div>
+							</div>
+						</div>
+
+						<!--Resolution-->
+						<div class="dropdown-field">
+							<button class="button dropdown-button active">Resolution</button>
+							<div class="dropdown-popup narrow">
+								<div class="dropdown-content">
+									<ul class="check-radio-list">
+										<li class = "check-item"><input type = "checkbox" id = "Cite_or_Arrest_Adult" value="" checked><label for="Cite_or_Arrest_Adult">Cite or Arrest Adult</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "Cite_or_Arrest_Juvenile" value="" checked><label for="Cite_or_Arrest_Juvenile">Cite or Arrest Juvenile</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "Exceptional_Adult" value="" checked><label for="Exceptional_Adult">Exceptional Adult</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "Exceptional_Juvenile" value="" checked><label for="Exceptional_Juvenile">Exceptional Juvenile</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "Open_or_Active" value="" checked><label for="Open_or_Active">Open or Active</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "Unfounded" value="" checked><label for="Unfounded">Unfounded</label></li>
+										<!--
+										<li class = "check-item"><input type = "checkbox" id = "arrest-booked" value="" checked><label for="arrest-booked">Arrest, Booked</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "arrest-cited" value="" checked><label for="arrest-cited">Arrest, Cited</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "cleared-contact" value="" checked><label for="cleared-contact">Cleared-Contact Juvenile for more info</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "exceptional-clearance" value="" checked><label for="exceptional-clearance">Exceptional Clearance</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "juvenile-booked" value="" checked><label for="juvenile-booked">Juvenile Booked</label></li>
+										<li class = "check-item"><input type = "checkbox" id = "unfounded" value="" checked><label for="unfounded">Unfounded</label></li>
+										-->
+									</ul>
+								</div>
+							</div>
+						</div>
+					</fieldset>
+				</div>
+			</div>
+		</header>
+
+
+		<!--MAIN-->
+		<!--SIDEBAR-->
+		<aside id="page-sidebar" class="grid-item" role="complementary">
+			<header id="sidebar-header">
+				<div class="title"><span class="records-match-count" id="records-match-count">---</span> matching records</div>
+				<!-- <div class="sub-title">
+					grouped by
+					<div id="crime-categories" class="dropdown-field text-only">
+						<button class="text-only dropdown-button" data-crime-category="crime-safety-categories">Crime Safety Categories</button>
+						<div class="dropdown-popup narrow outline full-width">
+							<ul id="date-range-presets" class="button-list">
+								<li class="button outline full-width selected" data-crime-category="crime-safety-categories">Crime Safety Categories</li>
+								<li class="button outline full-width" data-crime-category="sfpd-crime-categories">SFPD Crime Categories</li>
+							</ul>
+						</div>
+					</div>
+				</div> -->
+			</header>
+
+			<div id="sidebar-content">
+				<fieldset id="data-categories">
+					<ul class="check-radio-list">
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="arson" value="" checked>
+							<label for="arson">Arson</label>
+							<span class="data-crime-count" id = "Arson_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="assault" value="" checked>
+							<label for="assault">Assault</label>
+							<span class="data-crime-count" id = "Assault_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="burglary" value="" checked>
+							<label for="burglary">Burglary</label>
+							<span class="data-crime-count" id = "Burglary_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="dating-violence" value="" checked>
+							<label for="dating-violence">Dating Violence</label>
+							<span class="data-crime-count" id = "Dating_Violence_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="domestic-violence" value="" checked>
+							<label for="domestic-violence">Domestic Violence</label>
+							<span class="data-crime-count" id = "Domestic_Violence_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="drug-possession" value="" checked>
+							<label for="drug-possession">Drug Possession</label>
+							<span class="data-crime-count" id = "Drug_Possession_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="general-crime" value="" checked>
+							<label for="general-crime">General Crime</label>
+							<span class="data-crime-count" id = "General_Crime_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="hate-crime" value="" checked>
+							<label for="hate-crime">Hate Crime</label>
+							<span class="data-crime-count" id = "Hate_Crime_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="liquor-violation" value="" checked>
+							<label for="liquor-violation">Liquor Violation</label>
+							<span class="data-crime-count" id = "Liquor_Violation_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="vehicle-theft" value="" checked>
+							<label for="vehicle-theft">Motor Vehicle Theft</label>
+							<span class="data-crime-count" id = "Motor_Vehicle_Theft_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="robbery" value="" checked>
+							<label for="robbery">Robbery</label>
+							<span class="data-crime-count" id = "Robbery_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="sex-crimes" value="" checked>
+							<label for="sex-crimes">Sex Crimes</label>
+							<span class="data-crime-count" id = "Sex_Crimes_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="stalking" value="" checked>
+							<label for="stalking">Stalking</label>
+							<span class="data-crime-count" id = "Stalking_count">-</span>
+						</li>
+						<li class="check-item">
+							<input type="checkbox" class="condensed" id="weapons-possession" value="" checked>
+							<label for="weapons-possession">Weapons Possessions</label>
+							<span class="data-crime-count" id = "Weapons_Possessions_count">-</span>
+						</li>
+					</ul>
+				</fieldset>
+
+				<fieldset id="data-actions">
+					<button class="bigger button full-width" id="ButtonViewDataset">View Dataset</button>
+					<button class="bigger heavy button full-width ButtonExportCrimeData">Export Crime Data</button>
+				</fieldset>
+			</div>
+		</aside>
+
+
+		<!--CONTENT-->
+		<main id="page-content" class="grid-item" role="main">
+			<div id="map-container">
+				<div id="map"></div>
+			</div>
+		</main>
+
+		<div id="ViewDataSet">
+			<div id="ViewDataSetInfo" class="table-wrapper"></div>
+		</div>
+
+
+		<!--FOOTER-->
+		<footer id="page-footer" class="grid-item">
+			<div class="footer-copyright">© SFCrimeData.org</div>
+			<div class="nav">
+				<ul>
+					<li>Contributors:</li>
+					<li><a href="http://codeforsanfrancisco.org/" target="_blank">Code for San Francisco</a></li>
+					<li><a href="http://joeygolaw.com" target="_blank">Joey Golaw</a></li>
+					<li><a href="https://civic.geosphere.io/" target="_blank">Civic Innovation Group</a></li>
+				</ul>
+			</div>
+		</footer>
+
+
+		<!--MAP LEGEND-->
+		<div class="modal fade" id="myLegend" role="dialog" tabindex="-1">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<div class="modal-title pull-left">Map Legend</div>
+						<div class="close-button middle" data-dismiss="modal"></div>
+					</div>
+
+					<div class="legend-body modal-body">
+						<div class="row">
+							<div class="legend-row col-sm-3">
+								<div><img class="legend-icon" src="./gfx/arsonIcon.svg"><br>Arson</div>
+								<div><img class="legend-icon" src="./gfx/domesticIcon.svg"><br>Domestic Violence</div>
+								<div><img class="legend-icon" src="./gfx/liquorIcon.svg"><br>Liquor Violation</div>
+								<div><img class="legend-icon" src="./gfx/stalkingIcon.svg"><br>Stalking</div>
+							</div>
+
+							<div class="legend-row col-sm-3">
+								<div><img class="legend-icon" src="./gfx/assaultIcon.svg"><br>Assault</div>
+								<div><img class="legend-icon" src="./gfx/drugsIcon.svg"><br>Drugs Possesion</div>
+								<div><img class="legend-icon" src="./gfx/motorIcon.svg"><br>Motor Vehicle Theft</div>
+								<div><img class="legend-icon" src="./gfx/weaponsIcon.svg"><br>Weapons Possesion</div>
+							</div>
+
+							<div class="legend-row col-sm-3">
+								<div><img class="legend-icon" src="./gfx/burglaryIcon.svg"><br>Burglary</div>
+								<div><img class="legend-icon" src="./gfx/crimeIcon.svg"><br>General Crime</div>
+								<div><img class="legend-icon" src="./gfx/robberyIcon.svg"><br>Robbery</div>
+
+							</div>
+
+							<div class="legend-row col-sm-3">
+								<div><img class="legend-icon" src="./gfx/datingIcon.svg"><br>Dating Violence</div>
+								<div><img class="legend-icon" src="./gfx/hateIcon.svg"><br>Hate Crimes</div>
+								<div><img class="legend-icon" src="./gfx/sexIcon.svg"><br>Sex Crimes</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+		<!-- Load jQuery from Google's CDN, so that it is likely to be already in the client's cache -->
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+		<script src="js/config.js"></script>
+
+		<script src='https://unpkg.com/mapbox@1.0.0-beta9/dist/mapbox-sdk.min.js'></script>
+		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+		<!-- Load pre-made scripts from vendors -->
+		<script src="//cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.1/URI.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/URI.js/1.18.1/jquery.URI.js"></script>
+		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+		<script src="//api.tiles.mapbox.com/mapbox.js/v2.1.5/mapbox.js"></script>
+		<script src="//api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/leaflet.markercluster.js"></script>
+		<script src="//api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.3/leaflet.draw.js"></script>
+		<script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+		<script src="//cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+		<script src="//cdn.datatables.net/buttons/1.2.1/js/dataTables.buttons.min.js"></script>
+		<script src="//cdn.datatables.net/buttons/1.2.1/js/buttons.colVis.min.js"></script>
+		<script src="//cdn.datatables.net/fixedheader/3.1.2/js/dataTables.fixedHeader.min.js"></script>
+		<script src="js/vendor/google-analytics.js"></script>
+		<script src="js/vendor/moment.js"></script>
+		<script src="js/vendor/daterangepicker.js"></script>
+		<script src="js/vendor/jquery.nouislider.all.min.js"></script>
+		<script src="js/vendor/bootstrap3-typeahead.js"></script>
+		<script src="js/vendor/leaflet.sleep.js"></script>
+
+		<!-- Load services -->
+		<script src="js/services/endpoints.js"></script>
+		<script src="js/services/tokens.js"></script>
+		<script src="js/services/addressService.js"></script>
+		<script src="js/services/incidentService.js"></script>
+
+		<!-- Load modules -->
+		<script src="js/modules/viewModel.js"></script>
+		<script src="js/modules/urlSearch.js"></script>
+		<script src="js/modules/history.js"></script>
+		<script src="js/modules/form.js"></script>
+		<script src="js/modules/map.js"></script>
+		<script src="js/modules/datasetLinks.js"></script>
+		<script src="js/modules/table.js"></script>
+		<script src="js/modules/page.js"></script>
+
+		<script src="js/FileSaver.min.js"></script>
+
+
+		<!-- Start the application -->
+		<script src="js/start.js"></script>
+		<script src="js/global.js"></script>
+		<!-- <footer class="footer-info"> © SFCrimeData.org Contributors: <a href="http://codeforsanfrancisco.org/">Code for San Francisco</a>, <a href="http://joeygolaw.com/work">Joey Golaw</a>, <a href="https://civic.geosphere.io/">Civic Innovation Group</a></footer> -->
+	</body>
+</html>
